@@ -1,10 +1,12 @@
 <script setup>
-import { ref,computed,watch } from 'vue'
-import { products } from '../services/dataStore.js'
+import { ref, computed, watch } from 'vue'
+import { products } from '../services/dataStore'
+import { showToast } from '../services/toast' // TOAST: import baru
 
 const form = ref({ nama_produk: '', harga: '', stok: '' })
 const editId = ref(null)
 const errorMessage = ref('')
+
 const keyword = ref('')
 
 const filteredProducts = computed(() =>
@@ -12,6 +14,7 @@ const filteredProducts = computed(() =>
     p.nama_produk.toLowerCase().includes(keyword.value.trim().toLowerCase())
   )
 )
+
 const perPage = 10
 const currentPage = ref(1)
 
@@ -31,6 +34,7 @@ watch(keyword, () => {
 watch(totalPages, (baru) => {
   if (currentPage.value > baru) currentPage.value = baru
 })
+
 function formatRupiah(angka) {
   return 'Rp ' + angka.toLocaleString('id-ID')
 }
@@ -54,6 +58,7 @@ function simpanProduk() {
     produk.nama_produk = nama_produk
     produk.harga = harga
     produk.stok = stok
+    showToast('Produk berhasil diperbarui') // TOAST
   } else {
     const idBaru = products.value.length
       ? Math.max(...products.value.map((p) => p.id)) + 1
@@ -66,6 +71,7 @@ function simpanProduk() {
       stok,
       created_at: new Date().toISOString().slice(0, 10),
     })
+    showToast('Produk berhasil ditambahkan') // TOAST
   }
 
   resetForm()
@@ -85,6 +91,7 @@ function hapusProduk(id) {
   if (confirm('Yakin ingin menghapus produk ini?')) {
     products.value = products.value.filter((p) => p.id !== id)
     if (editId.value === id) resetForm()
+    showToast('Produk berhasil dihapus') // TOAST
   }
 }
 </script>
