@@ -1,5 +1,5 @@
 <script setup>
-import { ref,computed } from 'vue'
+import { ref,computed,watch } from 'vue'
 import { products } from '../services/dataStore.js'
 
 const form = ref({ nama_produk: '', harga: '', stok: '' })
@@ -12,7 +12,25 @@ const filteredProducts = computed(() =>
     p.nama_produk.toLowerCase().includes(keyword.value.trim().toLowerCase())
   )
 )
+const perPage = 10
+const currentPage = ref(1)
 
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredProducts.value.length / perPage))
+)
+
+const pagedProducts = computed(() => {
+  const awal = (currentPage.value - 1) * perPage
+  return filteredProducts.value.slice(awal, awal + perPage)
+})
+
+watch(keyword, () => {
+  currentPage.value = 1
+})
+
+watch(totalPages, (baru) => {
+  if (currentPage.value > baru) currentPage.value = baru
+})
 function formatRupiah(angka) {
   return 'Rp ' + angka.toLocaleString('id-ID')
 }
@@ -159,8 +177,8 @@ function hapusProduk(id) {
         </thead>
 
         <tbody>
-        <tr v-for="(produk, index) in filteredProducts" :key="produk.id" class="border-b">            <td class="px-4 py-3">{{ index + 1 }}</td>
-            <td class="px-4 py-3">{{ produk.nama_produk }}</td>
+        <tr v-for="(produk, index) in pagedProducts" :key="produk.id" class="border-b">
+            <td class="px-4 py-3">{{ (currentPage - 1) * perPage + index + 1 }}</td>            <td class="px-4 py-3">{{ produk.nama_produk }}</td>
             <td class="px-4 py-3">{{ formatRupiah(produk.harga) }}</td>
             <td class="px-4 py-3">{{ produk.stok }}</td>
             <td class="px-4 py-3">{{ produk.created_at }}</td>
@@ -189,6 +207,33 @@ function hapusProduk(id) {
             </tr>
         </tbody>
       </table>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4">
+        <p class="text-sm text-gray-500">
+            Menampilkan
+            {{ filteredProducts.length ? (currentPage - 1) * perPage + 1 : 0 }}-{{ Math.min(currentPage * perPage, filteredProducts.length) }}
+            dari {{ filteredProducts.length }} produk
+        </p>
+
+        <div class="flex items-center gap-2">
+            <button
+            @click="currentPage--"
+            :disabled="currentPage === 1"
+            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+            Sebelumnya
+            </button>
+
+            <span class="text-sm">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+
+            <button
+            @click="currentPage++"
+            :disabled="currentPage === totalPages"
+            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+            Berikutnya
+            </button>
+        </div>
+        </div>
     </div>
   </div>
 </template>
