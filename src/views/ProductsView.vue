@@ -1,10 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import { ref,computed } from 'vue'
 import { products } from '../services/dataStore.js'
 
 const form = ref({ nama_produk: '', harga: '', stok: '' })
 const editId = ref(null)
 const errorMessage = ref('')
+const keyword = ref('')
+
+const filteredProducts = computed(() =>
+  products.value.filter((p) =>
+    p.nama_produk.toLowerCase().includes(keyword.value.trim().toLowerCase())
+  )
+)
 
 function formatRupiah(angka) {
   return 'Rp ' + angka.toLocaleString('id-ID')
@@ -132,7 +139,12 @@ function hapusProduk(id) {
         </button>
       </div>
     </form>
-
+    <input
+    v-model="keyword"
+    type="text"
+    placeholder="Cari nama produk..."
+    class="w-full md:w-72 border rounded px-3 py-2 mb-4 bg-white"
+    />
     <div class="bg-white rounded-lg shadow overflow-x-auto">
       <table class="w-full text-left">
         <thead class="bg-gray-50 border-b">
@@ -147,8 +159,7 @@ function hapusProduk(id) {
         </thead>
 
         <tbody>
-          <tr v-for="(produk, index) in products" :key="produk.id" class="border-b">
-            <td class="px-4 py-3">{{ index + 1 }}</td>
+        <tr v-for="(produk, index) in filteredProducts" :key="produk.id" class="border-b">            <td class="px-4 py-3">{{ index + 1 }}</td>
             <td class="px-4 py-3">{{ produk.nama_produk }}</td>
             <td class="px-4 py-3">{{ formatRupiah(produk.harga) }}</td>
             <td class="px-4 py-3">{{ produk.stok }}</td>
@@ -171,11 +182,11 @@ function hapusProduk(id) {
             </td>
           </tr>
 
-          <tr v-if="products.length === 0">
+          <tr v-if="filteredProducts.length === 0">
             <td colspan="6" class="px-4 py-6 text-center text-gray-500">
-              Belum ada produk
+                {{ keyword ? 'Produk tidak ditemukan' : 'Belum ada produk' }}
             </td>
-          </tr>
+            </tr>
         </tbody>
       </table>
     </div>
